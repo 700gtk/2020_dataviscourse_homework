@@ -1,4 +1,6 @@
 # CS-5630 / CS-6630 Homework 2
+changing this to see if my branch is public.
+
 *Due: Friday, September 11, 11:59 pm.*
 
 In this assignment you will use JavaScript to create a tree data structure, and then render that tree to the browser with the D3 library.
