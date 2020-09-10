@@ -70,6 +70,8 @@ class Tree {
     renderTree() {
         let cirlceRadius = 40;
         let xoffset = cirlceRadius;
+        let xspace = 145;
+        let yspace = 85;
 
         let svg = d3.select("body")
             .append("svg")
@@ -80,16 +82,16 @@ class Tree {
             .data(this.arr)
             .enter().append("line")
             .attr("x1", d => {
-               return d.parentName === "root"?"":d.parentNode.level * 100 + xoffset;
+               return d.parentName === "root"?"":d.parentNode.level * xspace + xoffset;
             })
             .attr("y1", d => {
-                return d.parentName === "root"?"":d.parentNode.position * 100 + xoffset;
+                return d.parentName === "root"?"":d.parentNode.position * yspace + xoffset;
             })
             .attr("x2", d => {
-                return d.parentName === "root"?"":d.level * 100 + xoffset;
+                return d.parentName === "root"?"":d.level * xspace + xoffset;
             })
             .attr("y2", d => {
-                return d.parentName === "root"?"":d.level * 100 + xoffset;
+                return d.parentName === "root"?"":d.position * yspace + xoffset;
             })
             .attr("class", "line");
 
@@ -98,8 +100,8 @@ class Tree {
             .enter()
             .append("g")
             .attr("transform", d => {
-                let x = d.level * 100 + xoffset;
-                let y = d.position * 100 + xoffset;
+                let x = d.level * xspace + xoffset;
+                let y = d.position * yspace + xoffset;
                 return "translate(" + x + "," + y + ")"
             })
             .attr("class", "nodeGroup");
