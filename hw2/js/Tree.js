@@ -59,7 +59,7 @@ class Tree {
         node.position = this.pos;
 
         node.children.forEach((child, index) => {
-            this.pos = index===0?this.pos:this.pos+1;
+            this.pos = index === 0 ? this.pos : this.pos + 1;
             this.assignPosition(child, this.pos);
         })
     }
@@ -68,20 +68,54 @@ class Tree {
      * Function that renders the tree
      */
     renderTree() {
-        let cirlceRadius = 30;
+        let cirlceRadius = 40;
         let xoffset = cirlceRadius;
-        let svg = d3.select("body").append("svg")
+
+        let svg = d3.select("body")
+            .append("svg")
             .attr("width", 1200)
             .attr("height", 1200);
 
-       let circles = svg.selectAll("circle")
+        let lines = svg.selectAll("line")
+            .data(this.arr)
+            .enter().append("line")
+            .attr("x1", d => {
+               return d.parentName === "root"?"":d.parentNode.level * 100 + xoffset;
+            })
+            .attr("y1", d => {
+                return d.parentName === "root"?"":d.parentNode.position * 100 + xoffset;
+            })
+            .attr("x2", d => {
+                return d.parentName === "root"?"":d.level * 100 + xoffset;
+            })
+            .attr("y2", d => {
+                return d.parentName === "root"?"":d.level * 100 + xoffset;
+            })
+            .attr("class", "line");
+
+        let circleGroups = svg.selectAll("g")
             .data(this.arr)
             .enter()
-            .append("circle");
+            .append("g")
+            .attr("transform", d => {
+                let x = d.level * 100 + xoffset;
+                let y = d.position * 100 + xoffset;
+                return "translate(" + x + "," + y + ")"
+            })
+            .attr("class", "nodeGroup");
 
-        let results = circles.attr("cx", d => {return d.level*100 + xoffset})
-            .attr("cy", d => {return d.position*100 + xoffset})
+        let cirlces = circleGroups.append("circle")
+            .attr("cx", 0)
+            .attr("cy", 0)
             .attr("r", cirlceRadius)
+            .attr("class", "circle");
+
+        let text = circleGroups.append("text")
+            .text(d => {return d.name})
+            .attr("class", "label");
+
+
+
     }
 
 }
