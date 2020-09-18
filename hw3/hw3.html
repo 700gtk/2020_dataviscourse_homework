@@ -4,6 +4,13 @@
     <meta charset="UTF-8" />
     <title>Homework 3</title>
     <style>
+
+      .drkBlue{
+        fill:#004f6d
+      }
+      .drkRed{
+        fill:#ea4a88
+      }
       /* style div and headers */
       div,
       h2 {
@@ -78,26 +85,28 @@
         grid-template-columns: 1fr 1fr;
       }
     </style>
+    <script src="script.js"></script>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
   </head>
 
   <body>
     <h3>CS-5630 / CS-6630 Homework 3</h3>
     <address>
-      <span>Your Name</span>
-      <span>Your Email</span>
-      <span>Your UID</span>
+      <span>Grant Keller</span>
+      <span>u0822035@gcloud.utah.edu</span>
+      <span>u0822035</span>
     </address>
     <br />
     <hr />
     <br />
 
     <span>
-      <button>Staircase</button>
+      <button onclick="staircase()">Staircase</button>
     </span>
 
     <span>
       <label>Dataset:</label>
-      <select id="dataset">
+      <select id="dataset" onchange="changeData()">
         <option value="covid_us">The US</option>
         <option selected value="covid_utah">Utah</option>
         <option value="covid_ca">California</option>
@@ -105,7 +114,7 @@
       </select>
     </span>
 
-    <span> <input type="checkbox" id="random" /> Random Subset </span>
+    <span> <input type="checkbox" id="random" onchange="changeData()" /> Random Subset </span>
 
     <br />
 
@@ -142,7 +151,7 @@
 
       <div>
         <h2>Line Charts</h2>
-        <svg  id="line-chart-svg" width="600" height="320">
+        <svg id="line-chart-svg" width="600" height="320">
           <g id="aLineChart-axis"></g>
           <g class="line-chart line-chart-x" transform="translate(50,15)">
             <path id="aLineChart"/>
