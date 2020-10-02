@@ -22,7 +22,7 @@ class CountryData {
 }
 
 /** Class representing the map view. */
-class Map {
+class WorldMap {
 
     /**
      * Creates a Map Object
@@ -31,11 +31,12 @@ class Map {
      * @param updateCountry a callback function used to notify other parts of the program when the selected
      * country was updated (clicked)
      */
-    constructor(data, updateCountry) {
+    constructor(data, updateCountry, popmap) {
         this.projection = d3.geoWinkel3().scale(140).translate([365, 225]);
         this.nameArray = data.population.map(d => d.geo.toUpperCase());
         this.populationData = data.population;
         this.updateCountry = updateCountry;
+        this.popmap = popmap;
     }
 
     /**
@@ -60,6 +61,31 @@ class Map {
         // We have provided a class structure for the data called CountryData that you should assign the paramters to in your mapping
 
         //TODO - your code goes here
+        let width = 750;
+        let height = 750;
+
+        let svg = d3.select("#map-chart")
+            .append('svg')
+            .attr("width", width)
+            .attr("height", height);
+
+        let path = d3.geoPath()
+            .projection(this.projection);//
+
+        let geoJ = topojson.feature(world, world.objects.countries);
+        let geoData = geoJ.features.map(feat => new CountryData(feat.type, feat.id, feat.properties, feat.geometry, "") );
+
+        svg.selectAll("path")
+            .data(geoData)
+            .join("path")
+            .attr("d", path)
+            .attr("class", d => {
+                let qq = this.popmap.get(d.id.toLowerCase());
+                if(qq === undefined){
+                    return "countries"
+                }
+                return qq.region
+            });
     }
 
     /**

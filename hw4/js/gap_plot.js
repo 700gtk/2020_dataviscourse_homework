@@ -19,6 +19,31 @@ class PlotData {
     }
 }
 
+class axes {
+    constructor(svg, height, width) {
+        this.svg = svg;
+        this.height = height;
+        this.width = width;
+        this.xAxis = this.svg.append("g").attr("transform", "translate(0," + this.height + ")");
+        this.yAxis = this.svg.append("g");
+
+    }
+
+    makeAxis(xMin, xMax, yMin, yMax) {
+        let xScale = d3.scaleLinear()
+        .domain([xMin, xMax])
+            .range([0, this.width]);
+        let yScale = d3.scaleLinear()
+        .domain([yMax,yMin])
+            .range([0, this.height]);
+
+        let xAxis = d3.axisBottom(xScale);
+        let yAxis = d3.axisLeft(yScale);
+        this.xAxis.call(xAxis);
+        this.yAxis.call(yAxis);
+    }
+}
+
 /** Class representing the scatter plot view. */
 class GapPlot {
 
@@ -39,11 +64,11 @@ class GapPlot {
      * @param updateYear a callback function used to notify other parts of the program when a year was updated
      * @param activeYear the year for which the data should be drawn initially
      */
-    constructor(data, updateCountry, updateYear, activeYear) {
+    constructor(data, updateCountry, updateYear, activeYear, popmap) {
 
         // ******* TODO: PART 2 *******
 
-        this.margin = { top: 20, right: 20, bottom: 60, left: 80 };
+        this.margin = {top: 20, right: 20, bottom: 60, left: 80};
         this.width = 810 - this.margin.left - this.margin.right;
         this.height = 500 - this.margin.top - this.margin.bottom;
         this.activeYear = activeYear;
@@ -51,8 +76,8 @@ class GapPlot {
         this.data = data;
 
         //TODO - your code goes here -
-
-
+        this.popmap = popmap;
+        this.axis;
         // ******* TODO: PART 3 *******
         /**
          For part 4 of the homework, you will be using the other 3 parameters.
@@ -101,11 +126,13 @@ class GapPlot {
             .attr("width", this.width + this.margin.left + this.margin.right)
             .attr("height", this.height + this.margin.top + this.margin.bottom);
 
-        let svgGroup = d3.select('#chart-view').select('.plot-svg').append('g').classed('wrapper-group', true);
+        let svgGroup = d3.select('#chart-view').select('.plot-svg').append('g').classed('wrapper-group', true).attr("transform", "translate(75,5)").attr("id", "chart");
 
 
         //TODO - your code goes here
-
+        let axis = new axes(svgGroup, this.height, this.width);
+        axis.makeAxis();
+        this.axis = axis;
 
         /* Below is the setup for the dropdown menu- no need to change this */
 
@@ -157,6 +184,87 @@ class GapPlot {
     updatePlot(activeYear, xIndicator, yIndicator, circleSizeIndicator) {
 
         // ******* TODO: PART 2 *******
+        this.activeYear = activeYear;
+
+        let plotDataObs = [];
+        for (let i = 0; i < this.data.gdp.length; i++) {
+            let country = this.data["child-mortality"][i].country;
+            let regionObj = this.popmap.get(this.data["child-mortality"][i].geo);
+            let region;
+
+            let doesntExist = false;
+            if (regionObj !== undefined){
+                region = regionObj.region;
+            }
+
+            let xIn;
+            let yIn;
+            let circIn;
+            if (xIndicator === "population") {
+                if (regionObj === undefined) {
+                    doesntExist = true;
+                } else {
+                    xIn = this.data["population"][regionObj.loc][activeYear];
+                }
+            } else {
+                xIn = this.data[xIndicator][i][activeYear];
+            }
+            if (yIndicator === "population") {
+                if (regionObj === undefined) {
+                    doesntExist = true;
+                } else {
+                    yIn = this.data["population"][regionObj.loc][activeYear];
+                }
+            } else {
+                yIn = this.data[yIndicator][i][activeYear];
+            }
+            if (circleSizeIndicator === "population") {
+                if (regionObj === undefined) {
+                    doesntExist = true;
+                } else {
+                    circIn = this.data["population"][regionObj.loc][activeYear];
+                }
+            } else {
+                circIn = this.data[circleSizeIndicator][i][activeYear];
+            }
+
+            if (!doesntExist)
+                plotDataObs.push(new PlotData(country, xIn, yIn, i, region, circIn))
+        }
+
+        //get maxs of the xInd and yInd
+        let jsYearKey = Array.from(Array(221), (d, i) => 1800 + i);
+        let lilXMax = [];
+        let lilYMax = [];
+        let lilcircMax = [];
+        let lilcircMin = [];
+        this.data[xIndicator].forEach(el => {
+            let lilArr = [];
+            for (let i = 0; i < jsYearKey.length; i++)
+                lilArr.push(el[jsYearKey[i]]);
+            lilXMax.push(Math.max.apply(Math, lilArr));
+        });
+        this.data[yIndicator].forEach(el => {
+            let lilArr = [];
+            for (let i = 0; i < jsYearKey.length; i++)
+                lilArr.push(el[jsYearKey[i]]);
+            lilYMax.push(Math.max.apply(Math, lilArr));
+        });
+        this.data[circleSizeIndicator].forEach(el => {
+            let lilArr = [];
+            for (let i = 0; i < jsYearKey.length; i++)
+                lilArr.push(el[jsYearKey[i]]);
+            lilcircMax.push(Math.max.apply(Math, lilArr));
+            lilcircMin.push(Math.min.apply(Math, lilArr));
+        });
+
+        let xMax = Math.max.apply(Math, lilXMax);
+        let yMax = Math.max.apply(Math, lilYMax);
+        let maxSize = Math.max.apply(Math, lilcircMax);
+        let minSize = Math.min.apply(Math, lilcircMin);
+
+        this.axis.makeAxis(0,xMax, 0, yMax);
+
         /*
         You will be updating the scatterplot from the data. hint: use the #chart-view div
 
@@ -190,16 +298,59 @@ class GapPlot {
          *  Function to determine the circle radius by circle size
          *  This is the function to size your circles, you don't need to do anything to this
          *  but you will call it and pass the circle data as the parameter.
-         * 
+         *
          * @param d the data value to encode
          * @returns {number} the radius
          */
+
         let circleSizer = function (d) {
             let cScale = d3.scaleSqrt().range([3, 20]).domain([minSize, maxSize]);
             return d.circleSize ? cScale(d.circleSize) : 3;
         };
 
         //TODO - your code goes here -
+        //draw circles
+        let xScale = (d) => {
+            return d / xMax * this.width
+        };
+        let yScale = (d) => {
+            return d / yMax * this.height
+        };
+
+        let chart = d3.select('#chart');
+
+        let circles = chart.selectAll("circle").data(plotDataObs);
+
+        circles.join("circle")
+            .attr("cx", d => xScale(d.xVal))
+            .attr("cy", d => this.height - yScale(d.yVal))
+            .attr("r", d => circleSizer(d))
+            .attr("class", d => {
+                if(d.region === undefined){
+                    return "countries"
+                }
+                return d.region
+            })
+            .on('mouseover', e => {
+                let toolTipInfo = e['country'];
+                d3.select('#tool-tip').transition().duration(200).style('opacity', 1).text(toolTipInfo);
+            })
+            .on('mouseout', function () {
+                d3.select('#tool-tip').style('opacity', 0)
+            })
+            .on('mousemove', function () {
+                d3.select('#tool-tip').style('left', (d3.event.pageX + 10) + 'px').style('top', (d3.event.pageY + 10) + 'px');
+            });
+
+        circles.exit()
+            .attr("opacity", 1)
+            .transition()
+            .duration(3000)
+            .attr("opacity", 0)
+            .remove();
+
+        this.drawLegend(minSize, maxSize);
+        this.drawDropDown(xIndicator, yIndicator, circleSizeIndicator);
     }
 
     /**
@@ -413,15 +564,4 @@ class GapPlot {
         //TODO - your code goes here -
 
     }
-
-    /**
-     * Returns html that can be used to render the tooltip.
-     * @param data 
-     * @returns {string}
-     */
-    tooltipRender(data) {
-        let text = "<h2>" + data['country'] + "</h2>";
-        return text;
-    }
-
 }

@@ -6,7 +6,7 @@ loadData().then(data => {
     this.activeYear = '2000';
     let that = this;
 
-    console.log(data)
+    console.log(data);
 
     // ******* TODO: PART 3 *******
     /**
@@ -35,10 +35,10 @@ loadData().then(data => {
 
     }
     // Creates the view objects
+    const popmap = popMap(data.population);
     const infoBox = new InfoBox(data);
-    const worldMap = new Map(data, updateCountry);
-    const gapPlot = new GapPlot(data, updateCountry, updateYear, this.activeYear);
-
+    const worldMap = new WorldMap(data, updateCountry, popmap);
+    const gapPlot = new GapPlot(data, updateCountry, updateYear, this.activeYear, popmap);
 
     // Initialize gapPlot here.
     //TODO - your code goes here -
@@ -49,9 +49,9 @@ loadData().then(data => {
         // ******* TODO: PART I *******
         // You need to pass the world topo data to the drawMap() function as a parameter, along with the starting activeYear.
         //TODO - your code goes here -
-
-
-
+        worldMap.drawMap(mapData);
+        gapPlot.drawPlot();
+        gapPlot.updatePlot(this.activeYear,"life-expectancy", "gdp","gdp")
     });
 
     // This clears a selection by listening for a click
@@ -91,11 +91,20 @@ async function loadData() {
     let cmu = await loadFile('data/cmu5.csv');
     let life = await loadFile('data/life_expect.csv');
 
+
     return {
         'population': pop,
         'gdp': gdp,
         'child-mortality': cmu,
         'life-expectancy': life,
-        'fertility-rate': tfr
+        'fertility-rate': tfr,
     };
+}
+
+function popMap(population){
+    let popuMap = new Map();
+    for(let i =0; i < population.length; i++){
+        popuMap.set(population[i].geo, {loc:i, region:population[i].region})
+    }
+    return popuMap;
 }
