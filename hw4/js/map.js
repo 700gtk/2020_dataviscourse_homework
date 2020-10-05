@@ -72,6 +72,7 @@ class WorldMap {
         let path = d3.geoPath()
             .projection(this.projection);//
 
+        // let geoLines = topojson.feature(world, world.arcs);
         let geoJ = topojson.feature(world, world.objects.countries);
         let geoData = geoJ.features.map(feat => new CountryData(feat.type, feat.id, feat.properties, feat.geometry, "") );
 
@@ -85,14 +86,16 @@ class WorldMap {
                     return "countries"
                 }
                 return qq.region
-            });
+            })
+            .attr("id", d => d.id.toLowerCase() )
+            .on('click', d => this.updateCountry(d.id.toLowerCase()));
     }
 
     /**
      * Highlights the selected conutry and region on mouse click
      * @param activeCountry the country ID of the country to be rendered as selected/highlighted
      */
-    updateHighlightClick(activeCountry) {
+    updateHighlightClick(activeCountry, previouslyActiveCountry) {
         // ******* TODO: PART 3 *******
         // Assign selected class to the target country and corresponding region
         // Hint: If you followed our suggestion of using classes to style
@@ -100,7 +103,19 @@ class WorldMap {
         // d3 selection and .classed to set these classes on here.
 
         //TODO - your code goes here
+        if(activeCountry === previouslyActiveCountry){
+            return;
+        }
+        let newActiveCountry = d3.select('#' + activeCountry);
+        let classes = newActiveCountry.attr('class');
 
+        newActiveCountry.attr('class', classes + ' selected-country');
+        if(previouslyActiveCountry !== null && previouslyActiveCountry !== undefined){
+            let prevActiveCountry = d3.select('#' + previouslyActiveCountry);
+            let classes = prevActiveCountry.attr('class');
+            let classSplit = classes.split(' ');
+            prevActiveCountry.attr('class', classSplit[0])
+        }
     }
 
     /**

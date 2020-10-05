@@ -72,12 +72,17 @@ class GapPlot {
         this.width = 810 - this.margin.left - this.margin.right;
         this.height = 500 - this.margin.top - this.margin.bottom;
         this.activeYear = activeYear;
-
+        this.updateYear = updateYear;
+        this.updateCountry = updateCountry;
         this.data = data;
 
         //TODO - your code goes here -
         this.popmap = popmap;
         this.axis;
+        this.yearTitle = "";
+        this.xInd;
+        this.yInd;
+        this.circInd;
         // ******* TODO: PART 3 *******
         /**
          For part 4 of the homework, you will be using the other 3 parameters.
@@ -93,7 +98,6 @@ class GapPlot {
     /**
      * Sets up the plot, axes, and slider,
      */
-
     drawPlot() {
         // ******* TODO: PART 2 *******
         /**
@@ -133,6 +137,9 @@ class GapPlot {
         let axis = new axes(svgGroup, this.height, this.width);
         axis.makeAxis();
         this.axis = axis;
+
+        let yearTitle = svgGroup.append("text").attr("transform", "translate(75,85)").attr("id", "bigYear").text("2000").attr("style", "font-size:5em;").attr('class', 'countries');
+        this.yearTitle = yearTitle;
 
         /* Below is the setup for the dropdown menu- no need to change this */
 
@@ -183,8 +190,13 @@ class GapPlot {
      */
     updatePlot(activeYear, xIndicator, yIndicator, circleSizeIndicator) {
 
+        this.xInd = xIndicator;
+        this.yInd = yIndicator;
+        this.circInd = circleSizeIndicator;
         // ******* TODO: PART 2 *******
         this.activeYear = activeYear;
+        d3.select('#bigYear').text(this.activeYear);
+        d3.select('#sliderYear').text(this.activeYear);
 
         let plotDataObs = [];
         for (let i = 0; i < this.data.gdp.length; i++) {
@@ -331,15 +343,29 @@ class GapPlot {
                 }
                 return d.region
             })
-            .on('mouseover', e => {
+            .attr("id", d => {
+                let cntry = this.popmap.get(d.country);
+                if(cntry === undefined){
+                    return "circ-countries"
+                }
+                return "circ-" + cntry.geo;
+            })
+            .on('mouseenter', e => {
                 let toolTipInfo = e['country'];
                 d3.select('#tool-tip').transition().duration(200).style('opacity', 1).text(toolTipInfo);
             })
-            .on('mouseout', function () {
+            .on('mouseleave', function () {
                 d3.select('#tool-tip').style('opacity', 0)
             })
             .on('mousemove', function () {
                 d3.select('#tool-tip').style('left', (d3.event.pageX + 10) + 'px').style('top', (d3.event.pageY + 10) + 'px');
+            })
+            .on('click', d => {
+                let cntry = this.popmap.get(d.country);
+                if(cntry === undefined){
+                    return "circ-countries"
+                }
+                this.updateCountry(cntry.geo)
             });
 
         circles.exit()
@@ -488,13 +514,14 @@ class GapPlot {
             .append('div').classed('slider-label', true)
             .append('svg');
 
-        let sliderText = sliderLabel.append('text').text(this.activeYear);
+        let sliderText = sliderLabel.append('text').text(this.activeYear).attr("id", "sliderYear");
 
         sliderText.attr('x', yearScale(this.activeYear));
         sliderText.attr('y', 25);
 
-        yearSlider.on('input', function () {
+        yearSlider.on('input', function() {
             //TODO - your code goes here -
+            that.updateYear(this.value,that.xInd,that.yInd,that.circInd)
         });
     }
 

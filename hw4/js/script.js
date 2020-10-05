@@ -15,10 +15,38 @@ loadData().then(data => {
      * @param countryID the ID object for the newly selected country
      */
     function updateCountry(countryID) {
-
-        that.activeCountry = countryID;
-
+        if (countryID === null) {
+            return
+        }
         // TODO - your code goes here
+        worldMap.updateHighlightClick(countryID, this.activeCountry);
+        this.activeCountry = countryID;
+
+
+        //update the circles
+        let circles = d3.selectAll('circle');
+        circles.classed("selected-country", false);
+
+        let activeDot = d3.select("#circ-"+countryID);
+        activeDot.classed("selected-country", true);
+
+
+        let popRegion = popmap.get(countryID);
+        let regions = ['europe', 'africa', 'asia', 'americas'];
+
+        circles.classed('hidden', false);
+
+        if(popRegion !== undefined) {
+            regions.forEach(el => {
+                if(el !== popRegion.region) {
+                    let localFilter = circles.filter('.' + el);
+                    localFilter.classed( "hidden", true)
+                }
+                infoBox.updateTextDescription(this.activeCountry, that.activeYear)
+
+            });
+        }
+
     }
 
     // ******* TODO: PART 3 *******
@@ -29,14 +57,18 @@ loadData().then(data => {
      *  gap plot and the info box.
      *  @param year the new year we need to set to the other views
      */
-    function updateYear(year) {
+    function updateYear(year, x, y, circ) {
 
         //TODO - your code goes here -
+        this.activeYear = year;
+        gapPlot.updatePlot(this.activeYear, x, y, circ);
+        infoBox.updateTextDescription(this.activeCountry, this.activeYear)
 
     }
+
     // Creates the view objects
     const popmap = popMap(data.population);
-    const infoBox = new InfoBox(data);
+    const infoBox = new InfoBox(data, popmap);
     const worldMap = new WorldMap(data, updateCountry, popmap);
     const gapPlot = new GapPlot(data, updateCountry, updateYear, this.activeYear, popmap);
 
@@ -51,7 +83,8 @@ loadData().then(data => {
         //TODO - your code goes here -
         worldMap.drawMap(mapData);
         gapPlot.drawPlot();
-        gapPlot.updatePlot(this.activeYear,"life-expectancy", "gdp","gdp")
+        gapPlot.updatePlot(this.activeYear, "life-expectancy", "gdp", "gdp");
+        gapPlot.drawYearBar();
     });
 
     // This clears a selection by listening for a click
@@ -101,10 +134,11 @@ async function loadData() {
     };
 }
 
-function popMap(population){
+function popMap(population) {
     let popuMap = new Map();
-    for(let i =0; i < population.length; i++){
-        popuMap.set(population[i].geo, {loc:i, region:population[i].region})
+    for (let i = 0; i < population.length; i++) {
+        popuMap.set(population[i].geo, {loc: i, region: population[i].region});
+        popuMap.set(population[i].country, {geo: population[i].geo})
     }
     return popuMap;
 }

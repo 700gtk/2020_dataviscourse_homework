@@ -21,10 +21,17 @@ class InfoBox {
      * Creates a InfoBox Object
      * @param data the full data array
      */
-    constructor(data) {
-
-        //TODO - your code goes here -
-
+    constructor(data, popMap) {
+        this.data = data;
+        this.popMap = popMap;
+        this.infoBoxData;
+        this.location = d3.select('#country-detail');
+        this.title = this.location.append('h2');
+        this.population = this.location.append('div');
+        this.gdp = this.location.append('div');
+        this.childMortality = this.location.append('div');
+        this.lifeExpectancy = this.location.append('div');
+        this.totalFatality = this.location.append('div');
     }
 
     /**
@@ -43,16 +50,42 @@ class InfoBox {
          * you will then pass the data as paramters to make an InfoBoxData object for each category
          *
          */
-
         //TODO - your code goes here -
+        this.location.classed('select-hide', false); //un-hids the whole box
+
+        let popNum = this.popMap.get(activeCountry);
+
+        let country = this.data.population[popNum.loc].country;
+        let region = this.data.population[popNum.loc].region;
+        let indicator_name = this.data.population[popNum.loc].indicator_name;
+        let value = this.data.population[popNum.loc][activeYear];
+        this.infoBoxData = new InfoBoxData(country, region, indicator_name, value);
+
+        let countryInd = this.findCountry(activeCountry);
+        this.title.text(country);
+        this.population.text('Population: ' + this.data.population[popNum.loc][activeYear]);
+        this.gdp.text('GDP per capita: ' + this.data.gdp[countryInd][activeYear]);
+        this.childMortality.text('Child mortality (under the age of 5): ' + this.data['child-mortality'][countryInd][activeYear]);
+        this.lifeExpectancy.text('Life expectancy: ' + this.data['life-expectancy'][countryInd][activeYear]);
+        this.totalFatality.text('Total fertility rate: ' + this.data['fertility-rate'][countryInd][activeYear]);
     }
 
     /**
      * Removes or makes invisible the info box
      */
     clearHighlight() {
-
         //TODO - your code goes here -
+        this.location.classed('select-hide', true)
+    }
+
+    findCountry(countryName) {
+        let toRet;
+        this.data.gdp.forEach((el, ind) => {
+            if (el.geo === countryName) {
+                toRet = ind;
+            }
+        });
+        return toRet;
     }
 
 }
