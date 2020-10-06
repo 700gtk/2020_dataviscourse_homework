@@ -30,7 +30,7 @@ class Table {
                 key: 'winstate_inc',
                 alterFunc: d => +d
             },
-        ]
+        ];
 
         this.vizWidth = 300;
         this.vizHeight = 30;
@@ -202,6 +202,7 @@ class Table {
         let linearGradients = "";
         let iter = -1;
         let fillIter = -1;
+        containerSelect.selectAll('rect').remove();
         containerSelect.append('rect')
             .attr('x', d => 150 + d.value.marginLow)
             .attr('width', d => d.value.marginHigh - d.value.marginLow)
@@ -209,7 +210,7 @@ class Table {
             .attr('style', "opacity:.75")
             .attr('fill', d => {
                 fillIter++;
-                return 'url(#fillGradient'+(fillIter)+')'
+                return 'url(#fillGradient' + (fillIter) + ')'
             })
             .attr('class', d => {
                 iter++;
@@ -238,21 +239,22 @@ class Table {
         /**
          * add circles to the vizualizations
          */
+        containerSelect.selectAll('circle').remove();
         containerSelect.append('circle')
-            .attr("r", 5 )
-            .attr("cx", d => (d.value.marginHigh - d.value.marginLow)/2 + 150+d.value.marginLow)
+            .attr("r", 5)
+            .attr("cx", d => (d.value.marginHigh - d.value.marginLow) / 2 + 150 + d.value.marginLow)
             .attr("cy", 15)
-            .attr("stroke","black")
+            .attr("stroke", "black")
             .attr("fill", d => {
                 if (d.value.marginLow > 0) {
                     return "firebrick";
                 } else if (d.value.marginHigh > 0) {
-                    if((d.value.marginHigh + d.value.marginLow) > 0){
+                    if ((d.value.marginHigh + d.value.marginLow) > 0) {
                         return "firebrick";
                     }
                 }
                 return "steelblue";
-            })
+            });
     }
 
     attachSortHandlers() {
@@ -263,10 +265,56 @@ class Table {
          * Attach click handlers to all the th elements inside the columnHeaders row.
          * The handler should sort based on that column and alternate between ascending/descending.
          */
+        let columnHeaders = d3.selectAll('.sortable');
+        columnHeaders.on('click', d => {
 
+            let allThreeColumns = d.currentTarget.parentNode.children;
+            for (let child of allThreeColumns) {
+                child.classList.remove("sorting")
+                child.children[0].classList.add("no-display")
+            }
+            d.currentTarget.classList.add("sorting");
+            let icon = d.currentTarget.children[0];
+            icon.classList.remove("no-display");
+            icon.classList.remove("fa-sort-up");
+            icon.classList.remove("fa-sort-down");
 
+            let columnName = d.currentTarget.innerText;
+            let sortKey = "winstate_inc";
+            let sortNum = 2;
+            if (columnName.includes('State')) {
+                sortKey = 'state';
+                sortNum = 0;
+            } else if (columnName.includes("Margin of Victory")) {
+                sortKey = 'margin';
+                sortNum = 1;
+            }
+            this.headerData[0].sorted = false;
+            this.headerData[1].sorted = false;
+            this.headerData[2].sorted = false;
+
+            this.tableData.sort((a, b) => {
+                if (sortKey === 'state') {
+                    if (a[sortKey] < b[sortKey])
+                        return -1;
+                    if (a[sortKey] > b[sortKey])
+                        return 1;
+                    return 0;
+                }
+                return a[sortKey] - b[sortKey]
+            });
+            if (!this.headerData[sortNum].ascending) { //descending
+                icon.classList.add("fa-sort-down");
+                this.tableData.reverse();
+            } else {
+                icon.classList.add("fa-sort-up");
+            }
+
+            this.headerData[sortNum].sorted = true;
+            this.headerData[sortNum].ascending = !this.headerData[sortNum].ascending;
+            this.drawTable()
+        })
     }
-
 
     toggleRow(rowData, index) {
         ////////////
