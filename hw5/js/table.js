@@ -7,8 +7,7 @@ class Table {
         this.forecastData = forecastData;
         this.tableData = [...forecastData];
         // add useful attributes
-        for (let forecast of this.tableData)
-        {
+        for (let forecast of this.tableData) {
             forecast.isForecast = true;
             forecast.isExpanded = false;
         }
@@ -53,6 +52,28 @@ class Table {
          * Draw the legend for the bar chart.
          */
 
+        let MarginAxis = d3.select('#marginAxis');
+        let height = 100;
+        let width = 300;
+        MarginAxis.append('line')
+            .attr('x1', width / 2)
+            .attr('x2', width / 2)
+            .attr('y1', 0)
+            .attr('y2', height)
+            .style("stroke", "black");
+
+        let scale = 1.3;
+        let textFeatures = [75, 50, 25, 25, 50, 75];
+        MarginAxis.selectAll('text')
+            .data(textFeatures)
+            .enter()
+            .append('text')
+            .attr('x', (d, i) => i > 2 ? 145 - d * scale : 150 + d * scale - 25)
+            .attr('fill', (d, i) => i > 2 ? "steelblue" : "firebrick")
+            .attr('font-size', "1em")
+            .attr('y', height)
+            .text(d => "+" + d);
+
     }
 
     drawTable() {
@@ -62,13 +83,11 @@ class Table {
             .data(this.tableData)
             .join('tr');
 
-        rowSelection.on('click', (event, d) => 
-            {
-                if (d.isForecast)
-                {
-                    this.toggleRow(d, this.tableData.indexOf(d));
-                }
-            });
+        rowSelection.on('click', (event, d) => {
+            if (d.isForecast) {
+                this.toggleRow(d, this.tableData.indexOf(d));
+            }
+        });
 
         let forecastSelection = rowSelection.selectAll('td')
             .data(this.rowToCellDataTransform)
@@ -82,6 +101,8 @@ class Table {
         /**
          * with the forecastSelection you need to set the text based on the dat value as long as the type is 'text'
          */
+        let textSelection = forecastSelection.filter(d => d.type === 'text');
+        textSelection.text(d => d.value);
 
         let vizSelection = forecastSelection.filter(d => d.type === 'viz');
 
@@ -95,9 +116,9 @@ class Table {
             .data(d => [d, d, d])
             .join('g');
 
-        this.addGridlines(grouperSelect.filter((d,i) => i === 0), [-75, -50, -25, 0, 25, 50, 75]);
-        this.addRectangles(grouperSelect.filter((d,i) => i === 1));
-        this.addCircles(grouperSelect.filter((d,i) => i === 2));
+        this.addGridlines(grouperSelect.filter((d, i) => i === 0), [-75, -50, -25, 0, 25, 50, 75]);
+        this.addRectangles(grouperSelect.filter((d, i) => i === 1));
+        this.addCircles(grouperSelect.filter((d, i) => i === 2));
     }
 
     rowToCellDataTransform(d) {
@@ -116,16 +137,14 @@ class Table {
             }
         };
         let winChance;
-        if (d.isForecast)
-        {
+        if (d.isForecast) {
             const trumpWinChance = +d.winstate_inc;
             const bidenWinChance = +d.winstate_chal;
 
             const trumpWin = trumpWinChance > bidenWinChance;
             const winOddsValue = 100 * Math.max(trumpWinChance, bidenWinChance);
             let winOddsMessage = `${Math.floor(winOddsValue)} of 100`
-            if (winOddsValue > 99.5 && winOddsValue !== 100)
-            {
+            if (winOddsValue > 99.5 && winOddsValue !== 100) {
                 winOddsMessage = '> ' + winOddsMessage
             }
             winChance = {
@@ -133,15 +152,12 @@ class Table {
                 class: trumpWin ? 'trump' : 'biden',
                 value: winOddsMessage
             }
-        }
-        else
-        {
+        } else {
             winChance = {type: 'text', class: '', value: ''}
         }
 
         let dataList = [stateInfo, marginInfo, winChance];
-        for (let point of dataList)
-        {
+        for (let point of dataList) {
             point.isForecast = d.isForecast;
         }
         return dataList;
@@ -164,7 +180,16 @@ class Table {
         /**
          * add gridlines to the vizualization
          */
-    
+        let scale = 1.85;
+        containerSelect.selectAll('line')
+            .data(ticks)
+            .enter()
+            .append('line')
+            .style("stroke", (d, i) => i === 3 ? "black" : "gray")
+            .attr('x1', d => 150 + d)
+            .attr('x2', d => 150 + d)
+            .attr('y1', 0)
+            .attr('y2', 100)
     }
 
     addRectangles(containerSelect) {
@@ -174,8 +199,36 @@ class Table {
         /**
          * add rectangles for the bar charts
          */
+        let linearGradients = "";
+        let iter = -1;
+        let fillIter = -1;
+        containerSelect.append('rect')
+            .attr('x', d => 150 + d.value.marginLow)
+            .attr('width', d => d.value.marginHigh - d.value.marginLow)
+            .attr('height', 30)
+            .attr('style', "opacity:.75")
+            .attr('fill', d => {
+                fillIter++;
+                return 'url(#fillGradient'+(fillIter)+')'
+            })
+            .attr('class', d => {
+                iter++;
+                if (d.value.marginLow > 0) {
+                    return "trump";
+                } else if (d.value.marginHigh > 0) {
+                    let result = this.makeNewGradient(d.value.marginLow / (d.value.marginHigh - d.value.marginLow), iter);
+                    containerSelect._groups[iter][0].innerHTML += result;
+                    return "";
+                }
+                return "biden";
+            })
+    }
 
- 
+    makeNewGradient(changePoint, iteration) {
+        changePoint = Math.abs(Math.floor(changePoint * 100))
+        let percents = 'x1="' + ((changePoint - 1)) + '%" y1="' + changePoint + '%" x2="' + changePoint + '%" y2="' + changePoint + '%"';
+        let gradient = '<defs><linearGradient id="fillGradient' + iteration + '" ' + percents + ' ><stop offset="0%" style="stop-color:rgb(70,130,180);"></stop><stop offset="100%" style="stop-color:rgb(178,34,34);"></stop></linearGradient></defs>'
+        return gradient
     }
 
     addCircles(containerSelect) {
@@ -185,12 +238,24 @@ class Table {
         /**
          * add circles to the vizualizations
          */
-
-
+        containerSelect.append('circle')
+            .attr("r", 5 )
+            .attr("cx", d => (d.value.marginHigh - d.value.marginLow)/2 + 150+d.value.marginLow)
+            .attr("cy", 15)
+            .attr("stroke","black")
+            .attr("fill", d => {
+                if (d.value.marginLow > 0) {
+                    return "firebrick";
+                } else if (d.value.marginHigh > 0) {
+                    if((d.value.marginHigh + d.value.marginLow) > 0){
+                        return "firebrick";
+                    }
+                }
+                return "steelblue";
+            })
     }
 
-    attachSortHandlers() 
-    {
+    attachSortHandlers() {
         ////////////
         // PART 7 // 
         ////////////
