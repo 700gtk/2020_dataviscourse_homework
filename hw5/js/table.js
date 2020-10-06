@@ -239,21 +239,41 @@ class Table {
         /**
          * add circles to the vizualizations
          */
+
         containerSelect.selectAll('circle').remove();
         containerSelect.append('circle')
-            .attr("r", 5)
-            .attr("cx", d => (d.value.marginHigh - d.value.marginLow) / 2 + 150 + d.value.marginLow)
-            .attr("cy", 15)
+            .attr("r", d => {
+                if (!isNaN(d.value.marginHigh))
+                    return 5;
+                return 4;
+            })
+            .attr("cx", d => {
+                if (!isNaN(d.value.marginHigh))
+                    return (d.value.marginHigh - d.value.marginLow) / 2 + 150 + d.value.marginLow;
+                return 150 + d.value.margin
+            })
+            .attr("cy", d => {
+                if (!isNaN(d.value.marginHigh))
+                    return 15;
+                return 10
+            })
             .attr("stroke", "black")
             .attr("fill", d => {
-                if (d.value.marginLow > 0) {
-                    return "firebrick";
-                } else if (d.value.marginHigh > 0) {
-                    if ((d.value.marginHigh + d.value.marginLow) > 0) {
+                if (!isNaN(d.value.marginHigh)) {
+                    if (d.value.marginLow > 0) {
+                        return "firebrick";
+                    } else if (d.value.marginHigh > 0) {
+                        if ((d.value.marginHigh + d.value.marginLow) > 0) {
+                            return "firebrick";
+                        }
+                    }
+                    return "steelblue";
+                } else {
+                    if (d.value.margin > 0) {
                         return "firebrick";
                     }
+                    return "steelblue";
                 }
-                return "steelblue";
             });
     }
 
@@ -267,6 +287,7 @@ class Table {
          */
         let columnHeaders = d3.selectAll('.sortable');
         columnHeaders.on('click', d => {
+            this.collapseAll();
 
             let allThreeColumns = d.currentTarget.parentNode.children;
             for (let child of allThreeColumns) {
@@ -323,7 +344,13 @@ class Table {
         /**
          * Update table data with the poll data and redraw the table.
          */
+        this.collapseAll()
+        let pollInfo = this.pollData.get(rowData.state);
+        console.log(pollInfo)
 
+        this.tableData.splice(index + 1, 0, ...pollInfo);
+
+        this.drawTable()
     }
 
     collapseAll() {
