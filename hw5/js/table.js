@@ -5,6 +5,7 @@ class Table {
      */
     constructor(forecastData, pollData) {
         this.forecastData = forecastData;
+        this.curPoll = "";
         this.tableData = [...forecastData];
         // add useful attributes
         for (let forecast of this.tableData) {
@@ -53,8 +54,10 @@ class Table {
          */
 
         let MarginAxis = d3.select('#marginAxis');
-        let height = 100;
+        let height = 50;
         let width = 300;
+        MarginAxis.attr("height", height)
+            .attr("width", width);
         MarginAxis.append('line')
             .attr('x1', width / 2)
             .attr('x2', width / 2)
@@ -62,16 +65,15 @@ class Table {
             .attr('y2', height)
             .style("stroke", "black");
 
-        let scale = 1.3;
         let textFeatures = [75, 50, 25, 25, 50, 75];
         MarginAxis.selectAll('text')
             .data(textFeatures)
             .enter()
             .append('text')
-            .attr('x', (d, i) => i > 2 ? 145 - d * scale : 150 + d * scale - 25)
+            .attr('x', (d, i) => i > 2 ? this.scaleX(d)-15:this.scaleX(-d)-15)
             .attr('fill', (d, i) => i > 2 ? "steelblue" : "firebrick")
             .attr('font-size', "1em")
-            .attr('y', height)
+            .attr('y', height-10)
             .text(d => "+" + d);
 
     }
@@ -186,8 +188,8 @@ class Table {
             .enter()
             .append('line')
             .style("stroke", (d, i) => i === 3 ? "black" : "gray")
-            .attr('x1', d => 150 + d)
-            .attr('x2', d => 150 + d)
+            .attr('x1', d => this.scaleX(d))
+            .attr('x2', d => this.scaleX(d))
             .attr('y1', 0)
             .attr('y2', 100)
     }
@@ -199,13 +201,13 @@ class Table {
         /**
          * add rectangles for the bar charts
          */
-        let linearGradients = "";
         let iter = -1;
         let fillIter = -1;
+        containerSelect.selectAll('defs').remove();
         containerSelect.selectAll('rect').remove();
         containerSelect.append('rect')
-            .attr('x', d => 150 + d.value.marginLow)
-            .attr('width', d => d.value.marginHigh - d.value.marginLow)
+            .attr('x', d => this.scaleX(d.value.marginLow))
+            .attr('width', d => this.scaleX(d.value.marginHigh) - this.scaleX(d.value.marginLow))
             .attr('height', 30)
             .attr('style', "opacity:.75")
             .attr('fill', d => {
@@ -249,7 +251,7 @@ class Table {
             })
             .attr("cx", d => {
                 if (!isNaN(d.value.marginHigh))
-                    return (d.value.marginHigh - d.value.marginLow) / 2 + 150 + d.value.marginLow;
+                    return this.scaleX((d.value.marginHigh - d.value.marginLow) / 2 + d.value.marginLow);
                 return 150 + d.value.margin
             })
             .attr("cy", d => {
@@ -344,10 +346,15 @@ class Table {
         /**
          * Update table data with the poll data and redraw the table.
          */
-        this.collapseAll()
-        let pollInfo = this.pollData.get(rowData.state);
-        console.log(pollInfo)
+        this.collapseAll();
 
+        if(this.curPoll === rowData.state){
+            this.drawTable();
+            this.curPoll = "";
+            return
+        }
+        this.curPoll = rowData.state;
+        let pollInfo = this.pollData.get(rowData.state);
         this.tableData.splice(index + 1, 0, ...pollInfo);
 
         this.drawTable()
