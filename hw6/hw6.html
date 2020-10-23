@@ -11,6 +11,7 @@
     <script src="JS/main.js"></script>
     <link rel="stylesheet" href="main.css">
     <script src="JS/bubbleChart.js"></script>
+    <script src="JS/dataTable.js"></script>
     <!-- 
        Bootstrap styling if you want to use it: 
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
@@ -27,10 +28,26 @@
         <label class="switch">
             <input type="checkbox" id="toggle">
             <span class="slider"></span>
-        </label></div>
+        </label>
+    <button id="CommonTopics">Common Topics</button>
+    </div>
     <div class="chartContainer">
         <div class="bubbleChart" id="bubbleChart"></div>
-        <div class="dataTable" id="dataTable"></div>
+        <div class="dataTable" id="dataTable">
+            <div class="dataTableHeader">
+                <h2 id="Phrase">Phrase</h2>
+                <h2 id="Frequency">Frequency</h2>
+                <h2 id="Percentages">Percentages</h2>
+                <h2 id="Total">Total</h2>
+            </div>
+            <div class="dataTableSubHeader">
+                <div></div>
+                <div id="frequencyScale"></div>
+                <div id="percentageScale"></div>
+                <div></div>
+            </div>
+            <div id="dataTableBody" />
+        </div>
     </div>
 </div>
 </body>

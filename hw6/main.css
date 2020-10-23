@@ -1,21 +1,93 @@
-.bubbleChart{
+.bubbleChart {
     width: 50%;
     height: 100%;
     padding-right: .5vw;
     /*background-color: #dadada;*/
 }
-.chartContainer{
+
+.chartContainer {
     display: flex;
     flex-direction: row;
     width: 90vw;
     height: 80vh;
     margin: auto;
 }
-.dataTable{
+
+.dataTable {
     width: 50%;
     height: 100%;
     margin-left: .5vw;
-    background-color: cadetblue;
+    overflow-y: auto;
+}
+
+.tableRow {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.tableRow > div {
+    width: 25%;
+    height: 100%
+}
+
+.centerText {
+    text-align: center;
+}
+
+.infoDiv {
+    width: 200px;
+    height: 100px;
+    background-color: white;
+    position: absolute;
+    z-index: 2;
+
+    border: black;
+    border-width: 1px;
+    border-style: solid;
+}
+
+.opacityNone {
+    display: none;
+}
+
+#CommonTopics {
+    z-index: 2;
+    position: absolute;
+}
+
+.bigGrayDiv {
+    height: 100vh;
+    width: 100vw;
+    position: absolute;
+    top: 0;
+    background-color: white;
+    opacity: 0.5;
+}
+
+.dataTableSubHeader {
+    background-color: #85C1E9;
+    display: flex;
+    flex-direction: row;
+    height: 20px;
+}
+
+.dataTableSubHeader > div {
+    width: 25%;
+}
+
+.dataTableHeader {
+    background-color: #85C1E9;
+    display: flex;
+    flex-direction: row;
+    height: 40px;
+}
+
+.dataTableHeader > h2 {
+    margin: auto;
+    width: 25%;
+    margin-top: 0;
+    text-align: center;
 
 }
 
